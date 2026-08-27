@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Spaced-repetition review for Stanford CS111, CS157, CS251, and CS259Q.">
+  <meta name="theme-color" content="#17231f">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'">
+  <title>Recall — CS Course Review</title>
+  <link rel="stylesheet" href="vendor/Temml-Local.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" id="homeLink" href="#main" aria-label="Recall home">
+      <span class="brand-mark" aria-hidden="true">R</span>
+      <span><strong>Recall</strong><small>CS course review</small></span>
+    </a>
+    <nav class="header-actions" aria-label="Site tools">
+      <button class="icon-button" id="browseButton" type="button">Browse</button>
+      <button class="icon-button" id="settingsButton" type="button" aria-label="Open settings">Settings</button>
+      <button class="theme-button" id="themeButton" type="button" aria-label="Toggle dark mode"><span aria-hidden="true">◐</span></button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section id="dashboard" class="view" aria-labelledby="dashboardTitle">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">Your review queue</p>
+          <h1 id="dashboardTitle">Build durable recall.</h1>
+          <p id="dashboardLead" class="lead">Loading your cards…</p>
+        </div>
+        <button id="studyAllButton" class="primary-button" type="button">Study due cards</button>
+      </div>
+
+      <div class="stats" aria-label="Review statistics">
+        <article><span id="dueStat">0</span><small>Due now</small></article>
+        <article><span id="newStat">0</span><small>New today</small></article>
+        <article><span id="learnedStat">0</span><small>In rotation</small></article>
+        <article><span id="streakStat">0</span><small>Day streak</small></article>
+      </div>
+
+      <div class="progress-block">
+        <div><span>Overall coverage</span><strong id="coverageLabel">0%</strong></div>
+        <div class="progress-track" aria-hidden="true"><i id="coverageBar"></i></div>
+      </div>
+
+      <section class="library" aria-labelledby="libraryTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Deck library</p>
+            <h2 id="libraryTitle">Review by course and unit</h2>
+          </div>
+          <div id="courseFilters" class="filter-row" aria-label="Filter courses"></div>
+        </div>
+        <div id="courseLibrary"></div>
+      </section>
+    </section>
+
+    <section id="studyView" class="view hidden" aria-labelledby="studyTitle">
+      <div class="study-topbar">
+        <button id="leaveStudyButton" class="text-button" type="button">← Library</button>
+        <div class="session-progress">
+          <span id="studyCounter">1 / 10</span>
+          <div class="progress-track"><i id="sessionBar"></i></div>
+        </div>
+        <span id="cramBadge" class="cram-badge hidden">Cram mode</span>
+      </div>
+
+      <div class="study-shell">
+        <div class="card-context">
+          <span id="courseBadge" class="course-badge"></span>
+          <span id="unitLabel"></span>
+        </div>
+        <article id="flashcard" class="flashcard" aria-live="polite">
+          <p class="card-side-label">Prompt</p>
+          <div id="question" class="card-copy"></div>
+          <div id="answerArea" class="answer-area hidden">
+            <div class="answer-rule"></div>
+            <p class="card-side-label">Answer</p>
+            <div id="answer" class="card-copy answer-copy"></div>
+          </div>
+        </article>
+
+        <button id="revealButton" class="primary-button reveal-button" type="button">Show answer <kbd>Space</kbd></button>
+        <div id="ratingButtons" class="rating-grid hidden" aria-label="Rate your recall">
+          <button data-grade="1" type="button"><span>Again</span><small id="againInterval">10m</small><kbd>1</kbd></button>
+          <button data-grade="2" type="button"><span>Hard</span><small id="hardInterval">1d</small><kbd>2</kbd></button>
+          <button data-grade="3" type="button"><span>Good</span><small id="goodInterval">1d</small><kbd>3</kbd></button>
+          <button data-grade="4" type="button"><span>Easy</span><small id="easyInterval">4d</small><kbd>4</kbd></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="completeView" class="view hidden complete-view" aria-labelledby="completeTitle">
+      <div class="complete-mark" aria-hidden="true">✓</div>
+      <p class="eyebrow">Session complete</p>
+      <h1 id="completeTitle">That set is done.</h1>
+      <p id="completeSummary" class="lead"></p>
+      <button id="returnButton" class="primary-button" type="button">Return to library</button>
+    </section>
+
+    <section id="browseView" class="view hidden" aria-labelledby="browseTitle">
+      <div class="section-heading browse-heading">
+        <div>
+          <button id="leaveBrowseButton" class="text-button" type="button">← Library</button>
+          <p class="eyebrow">Card browser</p>
+          <h1 id="browseTitle">Search the question bank</h1>
+        </div>
+        <label class="search-box"><span class="sr-only">Search cards</span><input id="searchInput" type="search" placeholder="Search prompts, answers, units…"></label>
+      </div>
+      <p id="browseCount" class="browse-count"></p>
+      <div id="browseResults" class="browse-results"></div>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-heading">
+        <div><p class="eyebrow">Preferences</p><h2>Review settings</h2></div>
+        <button class="close-button" value="cancel" aria-label="Close settings">×</button>
+      </div>
+      <label class="field">New cards per day
+        <input id="newPerDayInput" type="number" min="1" max="100" step="1">
+      </label>
+      <p class="help">Progress is stored only in this browser. Export a backup before clearing site data or switching devices.</p>
+      <div class="dialog-actions">
+        <button id="exportButton" class="secondary-button" type="button">Export progress</button>
+        <label class="secondary-button file-button">Import progress<input id="importInput" type="file" accept="application/json"></label>
+      </div>
+      <button id="saveSettingsButton" class="primary-button" value="default">Save settings</button>
+    </form>
+  </dialog>
+
+  <footer>
+    <span id="footerCount"></span>
+    <span>Space reveals · 1–4 rates</span>
+  </footer>
+
+  <script src="vendor/temml.min.js"></script>
+  <script src="cards.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
