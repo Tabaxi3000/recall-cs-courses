@@ -105,6 +105,24 @@ const CARD_DATA = {
       ["Exam template for descriptor-table tracing?","Draw process descriptor tables, shared open-file descriptions with offsets/refcounts, and pipe endpoints after every fork, dup2, close, and exec."],
       ["Exam template for condition variables?","Write the shared predicate, identify its protecting mutex, wait in a while loop, update state under the lock, and signal only after the predicate may have changed."],
       ["Exam template for address translation?","Split VPN/offset, walk each indexed level, check permissions/presence, combine physical frame with unchanged offset, then account for TLB/page-fault behavior."]
+    ],
+    "09 · Worked traces & exam drills": [
+      ["An inode table starts at block $s$, blocks hold $k$ inodes, and numbering starts at 1. Which block holds inode $i$?","Block $s+\\lfloor(i-1)/k\\rfloor$; its slot within that block is $(i-1)\\bmod k$."],
+      ["A Unix V6 small inode has eight direct 512-byte block addresses. What is its maximum file size?","$8\\cdot512=4096$ bytes. The byte at offset $o$ uses direct entry $\\lfloor o/512\\rfloor$ and offset $o\\bmod512$."],
+      ["How do you trace a doubly indirect file-block lookup?","Subtract all direct and single-indirect coverage, divide by pointers per block to choose the first-level indirect block, then use quotient/remainder for the second-level pointer and data block."],
+      ["For crash-ordering questions, what must be written before a new directory entry points to an inode?","Initialize the inode and its referenced data first. Otherwise a crash can leave reachable metadata pointing to uninitialized or stale storage."],
+      ["What exactly happens when `dup2(oldfd, newfd)` targets an already-open descriptor?","The kernel closes `newfd`, makes it refer to the same open-file description as `oldfd`, and updates reference counts atomically. If the numbers are equal, nothing changes."],
+      ["A pipe reader blocks forever after all intended writers finish. What should you inspect first?","Look for any process that still holds a write-end descriptor, including inherited copies after `fork` or `exec`. EOF arrives only when every write end is closed."],
+      ["How many processes exist after $n$ unconditional successful `fork()` calls?","$2^n$. For output counting, trace which processes reach each print and remember buffered output present before a fork may be flushed more than once."],
+      ["Why must code after a successful `execvp` be treated as an error path?","Success replaces the process image and never returns. Reaching the next statement means `execvp` failed, so report the error and exit the child."],
+      ["What is the signal-safe child-reaping pattern?","The handler saves `errno`, repeatedly calls `waitpid(-1,&status,WNOHANG)` until no reapable child remains, restores `errno`, and uses only async-signal-safe operations."],
+      ["Why must robust low-level I/O loop?","`read` and `write` may transfer fewer bytes than requested; retry on `EINTR`, advance by the completed count, stop reads on 0, and handle other errors explicitly."],
+      ["A monitor controls a one-lane bridge. What belongs in the condition-variable predicate?","Direction, current occupancy, capacity, and any fairness rule. Check the complete safety/admission predicate in a `while` loop while holding the monitor lock."],
+      ["Given arrival $a_i$, completion $c_i$, and CPU burst $b_i$, compute turnaround and waiting time.","Turnaround is $c_i-a_i$. Waiting is turnaround minus actual service time: $c_i-a_i-b_i$. Response time uses first-run time instead of completion."],
+      ["Base $=4000$, bound $=1200$, virtual address $=900$: physical address or fault?","Valid because $900<1200$; physical address is $4000+900=4900$. The bound is a size/limit, not an ending physical address."],
+      ["With 4 KiB pages, split virtual address `0x12345`.","The low 12 bits are offset `0x345`; the remaining high bits form VPN `0x12`. Translation changes the page number but preserves the offset."],
+      ["What sequence handles a copy-on-write page fault?","Confirm a write to a present read-only COW mapping, allocate a frame, copy the old page, update the PTE to the new writable frame, adjust reference counts, invalidate the TLB entry, and retry."],
+      ["What five drawings solve most CS111 trace problems?","Current processes/threads, per-process descriptor tables, shared kernel objects with references, resource state/predicates, and an ordered event timeline. Update them after every relevant operation."]
     ]
   } },
   "CS 157": { units: {
@@ -174,6 +192,23 @@ const CARD_DATA = {
       ["How can first-order logic be complete but undecidable?","Every validity eventually has a proof, but there is no algorithm guaranteed to halt with yes/no on every formula."],
       ["Why is self-reference dangerous in a truth theory?","If a language can encode its own syntax and unrestricted truth predicate, liar-style diagonal sentences can create contradiction."],
       ["Exam checklist for an induction proof?","State the property and domain; cover every base/constructor case; mark the induction hypothesis; use it only on smaller/immediate parts; close the quantified conclusion."]
+    ],
+    "06 · Worked proof & model drills": [
+      ["Classify $p\\to(q\\to p)$.","Valid. If $p$ is false the outer implication is true; if $p$ is true then $q\\to p$ is true for either value of $q$."],
+      ["Give a countermodel to $p\\lor q\\models p$.","Set $p=\\text{False}$ and $q=\\text{True}$. The premise is true while the conclusion is false."],
+      ["Are $p\\to q$ and $\\neg p\\lor q$ merely consistent or equivalent?","Equivalent: both are false exactly when $p$ is true and $q$ is false."],
+      ["Resolve $p\\lor q$ with $\\neg p\\lor r$.","Resolving on $p$ yields $q\\lor r$. Do not retain either resolved literal."],
+      ["Show by resolution that $p\\to q, p\\models q$.","CNF for premises and negated conclusion is $(\\neg p\\lor q),p,\\neg q$. Resolve the first with $p$ to get $q$, then with $\\neg q$ to obtain the empty clause."],
+      ["In a Fitch proof of $p\\to r$ from $p\\to q$ and $q\\to r$, what is the first structural move?","Open a subproof assuming $p$, use modus ponens twice to derive $q$ and then $r$, and discharge the assumption with implication introduction."],
+      ["Countermodel to $\\forall x\\exists yR(x,y)\\models\\exists y\\forall xR(x,y)$?","Use domain $\\{a,b\\}$ with only $R(a,a)$ and $R(b,b)$. Everyone has some related witness, but no one witness is related from every element."],
+      ["Translate ‘Every student likes some book’ while allowing different books.","$\\forall x(Student(x)\\to\\exists y(Book(y)\\land Likes(x,y)))$. Moving $\\exists y$ outside would require one common book."],
+      ["Why is choosing the same constant for two existential premises illegal?","Each existential may be witnessed by a different domain element. A proof must introduce separate fresh witnesses unless equality is derived."],
+      ["Ground $\\forall x(P(x)\\to Q(x))$ over named domain $\\{a,b\\}$.","$(P(a)\\to Q(a))\\land(P(b)\\to Q(b))$, assuming the names exhaust the domain."],
+      ["What induction proves a property of every propositional formula?","Structural induction: prove atom cases, then show each connective constructor preserves the property using hypotheses for its immediate subformulas."],
+      ["In a binary-tree induction, what must the recursive case assume?","The property for both immediate subtrees, then use both hypotheses to prove it for the parent constructor."],
+      ["How do you prove $f(a)=f(c)$ from $a=b$ and $b=c$?","Use transitivity to obtain $a=c$, then function congruence/substitutivity to infer $f(a)=f(c)$."],
+      ["How can compactness show there are models of arbitrarily large finite size?","Introduce sentences requiring at least $n$ distinct elements for every $n$. Every finite subset has a sufficiently large finite model, so compactness gives a model satisfying all requirements, necessarily infinite."],
+      ["Semantic versus syntactic exam strategy?","For $\\models$, reason with interpretations or a countermodel. For $\\vdash$, exhibit licensed proof steps. Invoke soundness/completeness only when the question connects the two."]
     ]
   } },
   "CS 251": { units:{
@@ -358,6 +393,18 @@ const CARD_DATA = {
      [`What is the forced-Ether exam trap?`,`Contract balance can change without deposit logic, so formulas derived from current balance and internal supply can underflow or miscompute.`],
      [`What should you do when an exam question leaves behavior unspecified?`,`State a reasonable assumption explicitly and give the result under it; many CS 251 questions intentionally test whether you notice the missing condition.`],
     ],
+    "Synthesis · Cross-topic scenarios": [
+     [`A protocol commits to a bid and reveals it later. What four checks are essential?`,`The commitment must be hiding and binding; reveal must include domain-separated context; deadlines must distinguish commit and reveal phases; non-reveal must have a stated penalty or fallback.`],
+     [`Why does a Merkle proof plus a valid signature not prove a transaction is final?`,`They prove membership under one root and authorization by a key. Consensus must still establish that the root belongs to the canonical finalized history.`],
+     [`A bridge uses a multisig oracle. What assumptions replace source-chain verification?`,`That enough signers observe finality correctly, remain available, protect keys, and do not collude. Threshold size, rotation, and emergency powers become part of bridge security.`],
+     [`A governance token is flash-borrowable. What design blocks one-transaction takeovers?`,`Use voting-power snapshots from an earlier block, proposal and execution delays, quorum, and preferably time-weighted or delegated stake that cannot be borrowed atomically.`],
+     [`How do privacy and data availability pull a rollup design in different directions?`,`Users need enough published data to reconstruct state and exit, while privacy limits what is revealed. Encrypt or commit to data while proving validity, but still provide authorized users a durable availability path.`],
+     [`When does proof-of-stake slashing provide accountability rather than prevention?`,`Conflicting signatures create public evidence after a safety violation or attempted equivocation. Slashing identifies and penalizes offenders but does not make the conflicting messages impossible.`],
+     [`Why can a mathematically sound oracle price still be economically unsafe?`,`The source market may be shallow, delayed, manipulable within one transaction, or mismatched to liquidation timing. Sound arithmetic does not guarantee robust input economics.`],
+     [`What links transaction-ordering MEV to consensus design?`,`The party choosing block contents controls ordering value. Builder markets, proposer commitments, encrypted mempools, and inclusion lists redistribute or constrain that power without removing it automatically.`],
+     [`What is the invariant-first method for a cross-layer attack?`,`Write the asset/state invariant, trace information and authority across each layer, identify the first layer that accepts an unsupported claim, then repair that boundary and state the new trust assumption.`],
+     [`How should a post-quantum migration avoid stranding old assets?`,`Introduce a quantum-resistant spend path before the threat is urgent, provide authenticated migration, define treatment of dormant keys, and avoid exposing vulnerable public keys longer than necessary.`],
+    ],
    }},
   "CS 259Q": { units: {
     "01 · Physics of information & overview": [
@@ -467,6 +514,28 @@ const CARD_DATA = {
       ["Are Fibonacci braids computationally universal?","Their braid representation is dense enough for approximating arbitrary encoded unitaries, while measurement/fusion supplies initialization and readout."],
       ["What error remains in topological computation?","Thermal anyon creation, motion, imperfect measurement, leakage, and finite-separation effects still require active control and error correction."],
       ["Worked-problem workflow for anyon braids?","Choose a fusion-tree basis, insert $F$ moves until the braided pair is adjacent, apply the channel-dependent $R$, then undo the basis changes."]
+    ],
+    "10 · Worked calculations & circuit drills": [
+      ["What is the reduced state of either qubit of $|\\Phi^+\\rangle=(|00\\rangle+|11\\rangle)/\\sqrt2$?","$I/2$. Tracing out either side removes the cross terms and leaves equal probabilities on $|0\\rangle$ and $|1\\rangle$."],
+      ["Equal-prior pure states have overlap magnitude $c$. What is optimal discrimination success?","Helstrom gives $p_{\\rm succ}=\\tfrac12(1+\\sqrt{1-c^2})$. Orthogonal states give 1; identical states give $1/2$."],
+      ["Apply complete dephasing to $\\rho=\\begin{pmatrix}a&b\\\\b^*&d\\end{pmatrix}$.","The output is $\\operatorname{diag}(a,d)$. Populations remain while off-diagonal coherence vanishes."],
+      ["Amplitude damping with probability $\\gamma$ acts on $|1\\rangle$. What is the output density matrix?","$(1-\\gamma)|1\\rangle\\langle1|+\\gamma|0\\rangle\\langle0|$: decay is probabilistic after the environment is traced out."],
+      ["What is $QFT_4|1\\rangle$?","$\\tfrac12(|0\\rangle+i|1\\rangle-|2\\rangle-i|3\\rangle)$ using phase $e^{2\\pi i y/4}$."],
+      ["Use order finding to factor 15 with $a=2$.","The order is $r=4$ because $2^4\\equiv1\\pmod{15}$. Then $\\gcd(2^{2}-1,15)=3$ and $\\gcd(2^{2}+1,15)=5$."],
+      ["Phase estimation receives eigenphase $\\phi=3/8$ with three counting qubits. What ideal bit string appears?","`011`, because $3/8=0.011_2$ is exactly representable with three fractional bits."],
+      ["About how many Grover iterations search 1024 items for one marked item?","$\\lfloor(\\pi/4)\\sqrt{1024}\\rfloor\\approx25$ iterations."],
+      ["How does the Grover count change for four marked items among 1024?","Use $\\frac{\\pi}{4}\\sqrt{N/M}$, giving about $\\frac{\\pi}{4}\\sqrt{256}\\approx12.6$, so roughly 12–13 iterations."],
+      ["For the three-qubit bit-flip code, what syndrome identifies an $X$ error on the middle qubit?","With stabilizers $Z_1Z_2$ and $Z_2Z_3$, both checks flip sign, giving syndrome $(-1,-1)$."],
+      ["What condition makes CSS $X$- and $Z$-type stabilizers commute?","Their binary support vectors must have even overlap, equivalently the relevant classical parity-check products vanish mod 2."],
+      ["State the quantum Singleton bound for an $[[n,k,d]]$ code.","$n-k\\ge2(d-1)$. It limits how much redundancy is required for distance $d$."],
+      ["A qubit has eigenvalues $p$ and $1-p$. What is its entropy?","$S(\\rho)=H_2(p)=-p\\log_2p-(1-p)\\log_2(1-p)$. It is 0 at $p=0,1$ and 1 at $p=1/2$."],
+      ["What is the mutual information $I(A:B)$ of a Bell pair?","$S(A)+S(B)-S(AB)=1+1-0=2$ bits."],
+      ["A source has entropy $S(\\rho)=0.6$ qubits/signal. Roughly how large is the typical subspace for 100 signals?","About $2^{100\\cdot0.6}=2^{60}$ dimensions, up to subexponential factors and a small atypical probability."],
+      ["What is the fusion-space dimension of $n$ Fibonacci anyons with fixed total charge?","It follows the Fibonacci recurrence because $\\tau\\times\\tau=1+\\tau$; the exact index depends on the chosen total charge, but growth is asymptotically $\\varphi^n$."],
+      ["How do you braid nonadjacent anyons in a fusion-tree basis?","Apply $F$ moves to a basis where the pair fuses first, apply the appropriate $R$ phase/matrix, then apply inverse $F$ moves."],
+      ["In teleportation, which corrections correspond to Alice's two measurement bits?","For outcomes `00,01,10,11`, Bob applies $I,X,Z,XZ$ respectively, up to convention/global phase."],
+      ["Why does measuring a stabilizer syndrome not reveal $\\alpha,\\beta$ of an encoded qubit?","All logical codewords share the same stabilizer eigenvalues; the syndrome distinguishes error subspaces while acting identically on logical amplitudes."],
+      ["How do you check a proposed Kraus representation?","Verify $\\sum_k A_k^\\dagger A_k=I$ for trace preservation, compute its action on a general density matrix or basis operators, and confirm the intended channel parameters." ]
     ]
   } }
 };

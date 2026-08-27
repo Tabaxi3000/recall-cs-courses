@@ -6,7 +6,7 @@ const THEME_KEY = "recall-cs-theme";
 const COURSE_COLORS = { "CS 111": "cs111", "CS 157": "cs157", "CS 251": "cs251", "CS 259Q": "cs259q" };
 
 const $ = (selector) => document.querySelector(selector);
-const views = [$("#dashboard"), $("#studyView"), $("#completeView"), $("#browseView")];
+const views = [$("#dashboard"), $("#studyView"), $("#completeView"), $("#browseView"), $("#toolsView")];
 
 function hashId(value) {
   let hash = 2166136261;
@@ -37,15 +37,38 @@ for (const [course, courseData] of Object.entries(CARD_DATA)) {
   }
 }
 function today() { return new Date().toISOString().slice(0, 10); }
+function defaultTools() {
+  return {
+    focusSessions: 0,
+    focusMinutes: 0,
+    sprintsCompleted: 0,
+    quizAttempts: 0,
+    quizCorrect: 0,
+    scratchpad: "",
+    timer: { preset: "classic", phase: "focus", remaining: 25 * 60, running: false, endAt: 0, cycle: 0 }
+  };
+}
 function defaultStore() {
-  return { version: 1, progress: {}, settings: { newPerDay: 20 }, introduced: { date: today(), count: 0 }, reviewDates: [] };
+  return { version: 1, progress: {}, settings: { newPerDay: 20 }, introduced: { date: today(), count: 0 }, reviewDates: [], tools: defaultTools() };
+}
+function normalizeStore(parsed) {
+  const base = defaultStore();
+  return {
+    ...base,
+    ...parsed,
+    settings: { ...base.settings, ...parsed.settings },
+    introduced: { ...base.introduced, ...parsed.introduced },
+    reviewDates: Array.isArray(parsed.reviewDates) ? parsed.reviewDates : [],
+    tools: { ...base.tools, ...parsed.tools, timer: { ...base.tools.timer, ...parsed.tools?.timer } }
+  };
 }
 function loadStore() {
+  const base = defaultStore();
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (parsed && parsed.version === 1 && parsed.progress) return parsed;
+    if (parsed && parsed.version === 1 && parsed.progress) return normalizeStore(parsed);
   } catch (_) { /* use defaults */ }
-  return defaultStore();
+  return base;
 }
 let store = loadStore();
 
@@ -303,7 +326,7 @@ function importProgress(file) {
     try {
       const imported = JSON.parse(reader.result);
       if (!imported || imported.version !== 1 || typeof imported.progress !== "object") throw new Error("Unsupported file");
-      store = imported;
+      store = normalizeStore(imported);
       saveStore();
       $("#settingsDialog").close();
       renderDashboard();
@@ -314,8 +337,239 @@ function importProgress(file) {
   reader.readAsText(file);
 }
 
+const TIMER_PRESETS = {
+  classic: { focus: 25, short: 5, long: 15 },
+  deep: { focus: 50, short: 10, long: 20 }
+};
+function timerMinutes(phase = store.tools.timer.phase) {
+  return TIMER_PRESETS[store.tools.timer.preset][phase];
+}
+
+function formatClock(seconds) {
+  const safe = Math.max(0, seconds);
+  return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
+}
+
+function setTimerMessage(message) {
+  $("#timerMessage").textContent = message;
+}
+
+function advanceTimer(countFocus = false) {
+  const timer = store.tools.timer;
+  timer.running = false;
+  timer.endAt = 0;
+  if (timer.phase === "focus") {
+    if (countFocus) {
+      timer.cycle += 1;
+      store.tools.focusSessions += 1;
+      store.tools.focusMinutes += timerMinutes("focus");
+    }
+    timer.phase = timer.cycle > 0 && timer.cycle % 4 === 0 ? "long" : "short";
+    setTimerMessage(countFocus ? "Focus block complete. Take the break." : "Focus skipped. Take a short reset.");
+  } else {
+    timer.phase = "focus";
+    setTimerMessage("Break complete. Choose the next concrete task.");
+  }
+  timer.remaining = timerMinutes() * 60;
+  saveStore();
+  renderTimer();
+  renderToolStats();
+}
+
+function renderTimer() {
+  const timer = store.tools.timer;
+  if (timer.running) {
+    timer.remaining = Math.max(0, Math.ceil((timer.endAt - Date.now()) / 1000));
+    if (timer.remaining === 0) {
+      advanceTimer(true);
+      return;
+    }
+  }
+  const phaseNames = { focus: "Focus", short: "Short break", long: "Long break" };
+  $("#timerPhase").textContent = phaseNames[timer.phase];
+  $("#timerDisplay").textContent = formatClock(timer.remaining);
+  $("#timerToggleButton").textContent = timer.running ? "Pause" : timer.remaining < timerMinutes() * 60 ? "Resume" : `Start ${timer.phase === "focus" ? "focus" : "break"}`;
+  $("#cycleLabel").textContent = `${timer.cycle % 4} of 4 focus blocks in this cycle`;
+  document.title = timer.running ? `${formatClock(timer.remaining)} · Recall` : "Recall — CS Course Review";
+  document.querySelectorAll("[data-preset]").forEach((button) => button.classList.toggle("active", button.dataset.preset === timer.preset));
+}
+
+function toggleTimer() {
+  const timer = store.tools.timer;
+  if (timer.running) {
+    timer.remaining = Math.max(0, Math.ceil((timer.endAt - Date.now()) / 1000));
+    timer.running = false;
+    timer.endAt = 0;
+    setTimerMessage("Paused. Resume when the interruption is handled.");
+  } else {
+    timer.running = true;
+    timer.endAt = Date.now() + timer.remaining * 1000;
+    setTimerMessage(timer.phase === "focus" ? "Stay with one task until the timer ends." : "Leave the screen if you can.");
+  }
+  saveStore();
+  renderTimer();
+}
+
+function resetTimer() {
+  const timer = store.tools.timer;
+  timer.running = false;
+  timer.endAt = 0;
+  timer.remaining = timerMinutes() * 60;
+  setTimerMessage(timer.phase === "focus" ? "One focused interval, then step away." : "A real break makes the next block better.");
+  saveStore();
+  renderTimer();
+}
+
+function chooseTimerPreset(name) {
+  store.tools.timer.preset = name;
+  store.tools.timer.phase = "focus";
+  store.tools.timer.remaining = TIMER_PRESETS[name].focus * 60;
+  store.tools.timer.running = false;
+  store.tools.timer.endAt = 0;
+  setTimerMessage(name === "deep" ? "A longer block for proofs, traces, and worked problems." : "One focused interval, then step away.");
+  saveStore();
+  renderTimer();
+}
+
+function renderToolStats() {
+  $("#focusSessionStat").textContent = store.tools.focusSessions;
+  $("#focusMinuteStat").textContent = store.tools.focusMinutes;
+  $("#sprintStat").textContent = store.tools.sprintsCompleted;
+  $("#quizStat").textContent = store.tools.quizAttempts ? `${Math.round((store.tools.quizCorrect / store.tools.quizAttempts) * 100)}%` : "—";
+}
+
+function populateCourseSelect(select) {
+  select.innerHTML = Object.keys(CARD_DATA).map((course) => `<option>${course}</option>`).join("");
+}
+
+function populateUnitSelect(courseSelect, unitSelect, includeAll = false) {
+  const course = courseSelect.value;
+  const options = Object.keys(CARD_DATA[course].units);
+  unitSelect.innerHTML = `${includeAll ? '<option value="All">All topics</option>' : ""}${options.map((unit) => `<option>${unit}</option>`).join("")}`;
+}
+
+const COURSE_DRILLS = {
+  "CS 111": "Trace one process, descriptor, synchronization, or address-translation scenario on paper.",
+  "CS 157": "Construct one proof and one countermodel; label every rule or semantic choice.",
+  "CS 251": "Analyze one protocol or attack from invariant through repair and new assumption.",
+  "CS 259Q": "Work one derivation, circuit, channel, or coding calculation without looking up the next step."
+};
+
+const SPRINT_TIMES = {
+  25: [3, 12, 7, 3],
+  50: [7, 25, 12, 6],
+  90: [10, 45, 25, 10]
+};
+let currentSprint = null;
+
+function buildSprint() {
+  const course = $("#sprintCourse").value;
+  const unit = $("#sprintUnit").value;
+  const length = Number($("#sprintLength").value);
+  const times = SPRINT_TIMES[length];
+  const tasks = [
+    "Closed-book brain dump: write definitions, formulas, and steps you remember.",
+    COURSE_DRILLS[course],
+    "Check the relevant notes and correct the work in a different color. Record why each miss happened.",
+    "Write a three-sentence summary and choose the exact problem or deck to revisit next."
+  ];
+  currentSprint = { completed: false };
+  const plan = $("#sprintPlan");
+  plan.innerHTML = `<h3>${course} · ${length}-minute sprint</h3><p>${unit}</p>${tasks.map((task, index) => `<label class="sprint-step"><input type="checkbox"><span>${task}</span><small>${times[index]}m</small></label>`).join("")}`;
+  plan.classList.remove("hidden");
+  plan.querySelectorAll("input").forEach((input) => {
+    input.onchange = () => {
+      input.closest("label").classList.toggle("done", input.checked);
+      const finished = [...plan.querySelectorAll("input")].every((item) => item.checked);
+      if (finished && !currentSprint.completed) {
+        currentSprint.completed = true;
+        store.tools.sprintsCompleted += 1;
+        saveStore();
+        renderToolStats();
+      }
+    };
+  });
+}
+
+let quizState = null;
+
+function startQuiz() {
+  const course = $("#quizCourse").value;
+  const unit = $("#quizUnit").value;
+  const count = Number($("#quizCount").value);
+  const pool = cards.filter((card) => card.course === course && (unit === "All" || card.unit === unit));
+  quizState = { cards: shuffle(pool).slice(0, Math.min(count, pool.length)), index: 0, correct: 0, missed: [] };
+  $("#quizSetup").classList.add("hidden");
+  $("#quizComplete").classList.add("hidden");
+  $("#quizRunner").classList.remove("hidden");
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+  const card = quizState.cards[quizState.index];
+  $("#quizProgress").textContent = `${quizState.index + 1} / ${quizState.cards.length}`;
+  $("#quizQuestion").innerHTML = card.question;
+  $("#quizResponse").value = "";
+  $("#quizReference").classList.add("hidden");
+  $("#quizMarkButtons").classList.add("hidden");
+  $("#checkQuizButton").classList.remove("hidden");
+  renderMath($("#quizQuestion"));
+  $("#quizResponse").focus();
+}
+
+function checkQuizAnswer() {
+  const card = quizState.cards[quizState.index];
+  $("#quizAnswer").innerHTML = card.answer;
+  $("#quizReference").classList.remove("hidden");
+  $("#quizMarkButtons").classList.remove("hidden");
+  $("#checkQuizButton").classList.add("hidden");
+  renderMath($("#quizAnswer"));
+}
+
+function markQuiz(correct) {
+  if (correct) quizState.correct += 1;
+  else quizState.missed.push(quizState.cards[quizState.index]);
+  quizState.index += 1;
+  if (quizState.index < quizState.cards.length) renderQuizQuestion();
+  else finishQuiz();
+}
+
+function finishQuiz() {
+  const total = quizState.cards.length;
+  store.tools.quizAttempts += total;
+  store.tools.quizCorrect += quizState.correct;
+  saveStore();
+  renderToolStats();
+  $("#quizRunner").classList.add("hidden");
+  $("#quizProgress").textContent = "Complete";
+  const complete = $("#quizComplete");
+  complete.innerHTML = `<h3>${quizState.correct} of ${total} recalled</h3><p>${quizState.missed.length ? `${quizState.missed.length} prompt${quizState.missed.length === 1 ? "" : "s"} should get another pass.` : "No misses in this set."}</p><button id="reviewMissesButton" class="primary-button" type="button" ${quizState.missed.length ? "" : "disabled"}>Cram missed prompts</button><button id="newQuizButton" class="secondary-button" type="button">Build another quiz</button>`;
+  complete.classList.remove("hidden");
+  complete.querySelector("#reviewMissesButton").onclick = () => startSession(quizState.missed, true, "quiz misses");
+  complete.querySelector("#newQuizButton").onclick = () => {
+    complete.classList.add("hidden");
+    $("#quizSetup").classList.remove("hidden");
+    $("#quizProgress").textContent = "Not started";
+  };
+}
+
+function renderTools() {
+  if (!$("#sprintCourse").options.length) {
+    populateCourseSelect($("#sprintCourse"));
+    populateCourseSelect($("#quizCourse"));
+    populateUnitSelect($("#sprintCourse"), $("#sprintUnit"));
+    populateUnitSelect($("#quizCourse"), $("#quizUnit"), true);
+  }
+  $("#studyScratchpad").value = store.tools.scratchpad;
+  renderToolStats();
+  renderTimer();
+  showView($("#toolsView"));
+}
+
 $("#studyAllButton").onclick = () => startSession(cards, false, "all four courses");
 $("#homeLink").onclick = (event) => { event.preventDefault(); renderDashboard(); };
+$("#toolsButton").onclick = renderTools;
+$("#leaveToolsButton").onclick = renderDashboard;
 $("#revealButton").onclick = reveal;
 $("#ratingButtons").querySelectorAll("button").forEach((button) => { button.onclick = () => rate(Number(button.dataset.grade)); });
 $("#leaveStudyButton").onclick = renderDashboard;
@@ -323,6 +577,23 @@ $("#returnButton").onclick = renderDashboard;
 $("#browseButton").onclick = () => { showView($("#browseView")); renderBrowse(); $("#searchInput").focus(); };
 $("#leaveBrowseButton").onclick = renderDashboard;
 $("#searchInput").oninput = renderBrowse;
+
+$("#timerToggleButton").onclick = toggleTimer;
+$("#timerResetButton").onclick = resetTimer;
+$("#timerSkipButton").onclick = () => advanceTimer(false);
+document.querySelectorAll("[data-preset]").forEach((button) => { button.onclick = () => chooseTimerPreset(button.dataset.preset); });
+$("#sprintCourse").onchange = () => populateUnitSelect($("#sprintCourse"), $("#sprintUnit"));
+$("#quizCourse").onchange = () => populateUnitSelect($("#quizCourse"), $("#quizUnit"), true);
+$("#buildSprintButton").onclick = buildSprint;
+$("#startQuizButton").onclick = startQuiz;
+$("#checkQuizButton").onclick = checkQuizAnswer;
+$("#quizMissButton").onclick = () => markQuiz(false);
+$("#quizCorrectButton").onclick = () => markQuiz(true);
+$("#studyScratchpad").oninput = () => {
+  store.tools.scratchpad = $("#studyScratchpad").value;
+  saveStore();
+  $("#scratchSaved").textContent = "Saved locally";
+};
 
 const settingsDialog = $("#settingsDialog");
 $("#settingsButton").onclick = () => { $("#newPerDayInput").value = store.settings.newPerDay; settingsDialog.showModal(); };
@@ -347,4 +618,5 @@ document.addEventListener("keydown", (event) => {
   if (session.revealed && /^[1-4]$/.test(event.key)) rate(Number(event.key));
 });
 
+window.setInterval(renderTimer, 1000);
 renderDashboard();

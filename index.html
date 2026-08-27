@@ -18,6 +18,7 @@
       <span><strong>Recall</strong><small>CS course review</small></span>
     </a>
     <nav class="header-actions" aria-label="Site tools">
+      <button class="icon-button" id="toolsButton" type="button">Study tools</button>
       <button class="icon-button" id="browseButton" type="button">Browse</button>
       <button class="icon-button" id="settingsButton" type="button" aria-label="Open settings">Settings</button>
       <button class="theme-button" id="themeButton" type="button" aria-label="Toggle dark mode"><span aria-hidden="true">◐</span></button>
@@ -113,6 +114,82 @@
       </div>
       <p id="browseCount" class="browse-count"></p>
       <div id="browseResults" class="browse-results"></div>
+    </section>
+
+    <section id="toolsView" class="view hidden" aria-labelledby="toolsTitle">
+      <div class="tools-heading">
+        <button id="leaveToolsButton" class="text-button" type="button">← Library</button>
+        <p class="eyebrow">Study workspace</p>
+        <h1 id="toolsTitle">Turn review into practice.</h1>
+        <p class="lead">Run a focused block, build a course-specific sprint, test yourself in writing, and keep a lightweight error log.</p>
+      </div>
+
+      <div class="tool-stats" aria-label="Study tool statistics">
+        <article><span id="focusSessionStat">0</span><small>Focus sessions</small></article>
+        <article><span id="focusMinuteStat">0</span><small>Focused minutes</small></article>
+        <article><span id="sprintStat">0</span><small>Sprints finished</small></article>
+        <article><span id="quizStat">—</span><small>Quiz accuracy</small></article>
+      </div>
+
+      <div class="tools-grid">
+        <article class="tool-panel timer-panel">
+          <div class="tool-panel-heading"><div><p class="eyebrow">Focus timer</p><h2>Pomodoro</h2></div><span id="timerPhase" class="phase-badge">Focus</span></div>
+          <div id="timerDisplay" class="timer-display" role="timer" aria-live="off">25:00</div>
+          <p id="timerMessage" class="tool-help" aria-live="polite">One focused interval, then step away.</p>
+          <div class="preset-row" aria-label="Timer presets">
+            <button type="button" data-preset="classic" class="active">25 / 5</button>
+            <button type="button" data-preset="deep">50 / 10</button>
+          </div>
+          <div class="timer-actions">
+            <button id="timerToggleButton" class="primary-button" type="button">Start focus</button>
+            <button id="timerResetButton" class="secondary-button" type="button">Reset</button>
+            <button id="timerSkipButton" class="secondary-button" type="button">Skip phase</button>
+          </div>
+          <p id="cycleLabel" class="tool-help">0 of 4 focus blocks in this cycle</p>
+        </article>
+
+        <article class="tool-panel sprint-panel">
+          <div class="tool-panel-heading"><div><p class="eyebrow">Guided session</p><h2>Build a study sprint</h2></div></div>
+          <div class="compact-fields">
+            <label>Course<select id="sprintCourse"></select></label>
+            <label>Topic<select id="sprintUnit"></select></label>
+            <label>Length<select id="sprintLength"><option value="25">25 minutes</option><option value="50">50 minutes</option><option value="90">90 minutes</option></select></label>
+          </div>
+          <button id="buildSprintButton" class="primary-button" type="button">Build sprint</button>
+          <div id="sprintPlan" class="sprint-plan hidden" aria-live="polite"></div>
+        </article>
+
+        <article class="tool-panel quiz-panel">
+          <div class="tool-panel-heading"><div><p class="eyebrow">Written retrieval</p><h2>Free-response quiz</h2></div><span id="quizProgress" class="phase-badge">Not started</span></div>
+          <div id="quizSetup">
+            <div class="compact-fields quiz-fields">
+              <label>Course<select id="quizCourse"></select></label>
+              <label>Topic<select id="quizUnit"></select></label>
+              <label>Questions<select id="quizCount"><option value="5">5 questions</option><option value="10" selected>10 questions</option><option value="20">20 questions</option></select></label>
+            </div>
+            <button id="startQuizButton" class="primary-button" type="button">Start written quiz</button>
+          </div>
+          <div id="quizRunner" class="hidden">
+            <p class="card-side-label">Question</p>
+            <div id="quizQuestion" class="quiz-question"></div>
+            <label class="quiz-response">Your answer<textarea id="quizResponse" rows="5" placeholder="Answer from memory before checking…"></textarea></label>
+            <button id="checkQuizButton" class="primary-button" type="button">Check answer</button>
+            <div id="quizReference" class="quiz-reference hidden"><p class="card-side-label">Reference answer</p><div id="quizAnswer"></div></div>
+            <div id="quizMarkButtons" class="quiz-mark-buttons hidden">
+              <button id="quizMissButton" class="secondary-button" type="button">Needs work</button>
+              <button id="quizCorrectButton" class="primary-button" type="button">Got it</button>
+            </div>
+          </div>
+          <div id="quizComplete" class="quiz-complete hidden"></div>
+        </article>
+
+        <article class="tool-panel notes-panel">
+          <div class="tool-panel-heading"><div><p class="eyebrow">Error log</p><h2>Study scratchpad</h2></div><span id="scratchSaved" class="saved-label">Saved locally</span></div>
+          <p class="tool-help">Keep misconceptions, formulas you miss, and the next problem to retry. This text is included in progress exports.</p>
+          <label class="sr-only" for="studyScratchpad">Study scratchpad</label>
+          <textarea id="studyScratchpad" rows="13" placeholder="Example: CS111 — I keep forgetting that pipe EOF depends on every write descriptor being closed…"></textarea>
+        </article>
+      </div>
     </section>
   </main>
 
