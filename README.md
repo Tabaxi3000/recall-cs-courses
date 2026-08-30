@@ -1,10 +1,10 @@
-# Recall — CS Course Review
+# Recall — Course & Certification Review
 
-A static spaced-repetition site for CS 111 (New), CS 157, CS 251, and CS 259Q. Progress is stored in browser `localStorage` and can be exported/imported as JSON.
+A static spaced-repetition site for CS 111 (New), CS 157, CS 251, CS 259Q, and CompTIA A+ Core 1. Progress is stored in browser `localStorage` and can be exported/imported as JSON.
 
 **Live site:** https://tabaxi3000.github.io/recall-cs-courses/
 
-The bank currently contains 453 cards in 38 unit/topic decks. Use scheduled review for durable recall or Cram mode for an unscheduled pass through a full deck.
+The bank currently contains 719 cards in 65 unit/objective decks. The CompTIA A+ Core 1 bank contributes 266 cards across all 27 objectives in Domains 1–5. Use scheduled review for durable recall or Cram mode for an unscheduled pass through a full deck.
 
 ## Study tools
 
@@ -25,6 +25,6 @@ Open `http://localhost:8000` from this directory.
 
 ## Data
 
-Edit `cards.js`; card IDs are stable hashes of course, unit, and prompt text. Reordering cards does not reset progress, but changing a prompt creates a new card ID.
+Edit `cards.js` for the Stanford courses and `comptia-cards.js` for CompTIA A+ Core 1. Card IDs are stable hashes of course, unit, and prompt text. Reordering cards does not reset progress, but changing a prompt creates a new card ID.
 
 Math is rendered to MathML with vendored Temml 0.13.4.

@@ -3,7 +3,7 @@
 const DAY = 86_400_000;
 const STORAGE_KEY = "recall-cs-courses-v1";
 const THEME_KEY = "recall-cs-theme";
-const COURSE_COLORS = { "CS 111": "cs111", "CS 157": "cs157", "CS 251": "cs251", "CS 259Q": "cs259q" };
+const COURSE_COLORS = { "CS 111": "cs111", "CS 157": "cs157", "CS 251": "cs251", "CS 259Q": "cs259q", "CompTIA A+ Core 1": "comptia" };
 
 const $ = (selector) => document.querySelector(selector);
 const views = [$("#dashboard"), $("#studyView"), $("#completeView"), $("#browseView"), $("#toolsView")];
@@ -390,7 +390,7 @@ function renderTimer() {
   $("#timerDisplay").textContent = formatClock(timer.remaining);
   $("#timerToggleButton").textContent = timer.running ? "Pause" : timer.remaining < timerMinutes() * 60 ? "Resume" : `Start ${timer.phase === "focus" ? "focus" : "break"}`;
   $("#cycleLabel").textContent = `${timer.cycle % 4} of 4 focus blocks in this cycle`;
-  document.title = timer.running ? `${formatClock(timer.remaining)} · Recall` : "Recall — CS Course Review";
+  document.title = timer.running ? `${formatClock(timer.remaining)} · Recall` : "Recall — Course & Certification Review";
   document.querySelectorAll("[data-preset]").forEach((button) => button.classList.toggle("active", button.dataset.preset === timer.preset));
 }
 
@@ -452,7 +452,8 @@ const COURSE_DRILLS = {
   "CS 111": "Trace one process, descriptor, synchronization, or address-translation scenario on paper.",
   "CS 157": "Construct one proof and one countermodel; label every rule or semantic choice.",
   "CS 251": "Analyze one protocol or attack from invariant through repair and new assumption.",
-  "CS 259Q": "Work one derivation, circuit, channel, or coding calculation without looking up the next step."
+  "CS 259Q": "Work one derivation, circuit, channel, or coding calculation without looking up the next step.",
+  "CompTIA A+ Core 1": "Work one scenario by naming the failed layer, the safest confirming test, the correct component or setting, and why the nearest distractor is wrong."
 };
 
 const SPRINT_TIMES = {
@@ -566,7 +567,7 @@ function renderTools() {
   showView($("#toolsView"));
 }
 
-$("#studyAllButton").onclick = () => startSession(cards, false, "all four courses");
+$("#studyAllButton").onclick = () => startSession(cards, false, "all courses and certifications");
 $("#homeLink").onclick = (event) => { event.preventDefault(); renderDashboard(); };
 $("#toolsButton").onclick = renderTools;
 $("#leaveToolsButton").onclick = renderDashboard;
