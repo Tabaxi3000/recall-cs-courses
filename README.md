@@ -4,7 +4,7 @@ A static spaced-repetition site for CS 111 (New), CS 157, CS 251, CS 259Q, and C
 
 **Live site:** https://tabaxi3000.github.io/recall-cs-courses/
 
-The bank currently contains 719 cards in 65 unit/objective decks. The CompTIA A+ Core 1 bank contributes 266 cards across all 27 objectives in Domains 1–5. Use scheduled review for durable recall or Cram mode for an unscheduled pass through a full deck.
+The bank currently contains 702 cards in 62 unit/objective decks. CS 111, CS 157, and CS 251 use the September 2026 note-aligned banks: prompts follow the revised lecture ranges and identify whether they test a **core idea**, **trace**, **common trap**, or **exam method**. The CompTIA A+ Core 1 bank contributes 266 cards across all 27 objectives in Domains 1–5. Use scheduled review for durable recall or Cram mode for an unscheduled pass through a full deck.
 
 ## Study tools
 
@@ -25,6 +25,6 @@ Open `http://localhost:8000` from this directory.
 
 ## Data
 
-Edit `cards.js` for the Stanford courses and `comptia-cards.js` for CompTIA A+ Core 1. Card IDs are stable hashes of course, unit, and prompt text. Reordering cards does not reset progress, but changing a prompt creates a new card ID.
+Edit `note-aligned-cards.js` for CS 111, CS 157, and CS 251; `cards.js` retains CS 259Q and the legacy source banks; edit `comptia-cards.js` for CompTIA A+ Core 1. Card IDs are stable hashes of course, unit, and prompt text. Reordering cards does not reset progress, but changing a prompt or moving it to another unit creates a new card ID.
 
 Math is rendered to MathML with vendored Temml 0.13.4.
