@@ -3,7 +3,7 @@
 const DAY = 86_400_000;
 const STORAGE_KEY = "recall-cs-courses-v1";
 const THEME_KEY = "recall-cs-theme";
-const COURSE_COLORS = { "CS 111": "cs111", "CS 157": "cs157", "CS 251": "cs251", "CS 259Q": "cs259q", "CompTIA A+ Core 1": "comptia" };
+const COURSE_COLORS = { "CS 111": "cs111", "CS 144": "cs144", "CS 157": "cs157", "CS 251": "cs251", "CS 259Q": "cs259q", "CompTIA A+ Core 1": "comptia" };
 
 const $ = (selector) => document.querySelector(selector);
 const views = [$("#dashboard"), $("#studyView"), $("#completeView"), $("#browseView"), $("#toolsView")];
