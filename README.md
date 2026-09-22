@@ -4,7 +4,7 @@ A static spaced-repetition site for CS 111 (New), CS 144, CS 157, CS 251, CS 259
 
 **Live site:** https://tabaxi3000.github.io/recall-cs-courses/
 
-The bank currently contains 859 cards in 79 unit/objective decks. CS 111, CS 144, CS 157, and CS 251 use the September 2026 note-aligned banks: prompts follow the revised lecture ranges and identify whether they test a **core idea**, **trace**, **common trap**, **lab invariant**, or **exam method**. CS 144 contributes 157 cards across its 13 lectures, checkpoint sequence, and recurring practice-exam methods. The CompTIA A+ Core 1 bank contributes 266 cards across all 27 objectives in Domains 1–5. Use scheduled review for durable recall or Cram mode for an unscheduled pass through a full deck.
+The bank currently contains 960 cards in 86 unit/objective decks. CS 111, CS 144, CS 157, and CS 251 use the September 2026 note-aligned banks: prompts follow the revised lecture ranges and identify whether they test a **core idea**, **trace**, **common trap**, **lab invariant**, or **exam method**. CS 144 contributes 258 cards across Keith Winstein's Winter 2025 L00–L13 sequence, three clearly labeled exam supplements, all eight checkpoints, the lab FAQ, and recurring practice-exam methods. The CompTIA A+ Core 1 bank contributes 266 cards across all 27 objectives in Domains 1–5. Use scheduled review for durable recall or Cram mode for an unscheduled pass through a full deck.
 
 ## Study tools
 
