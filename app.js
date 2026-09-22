@@ -21,9 +21,10 @@ const cards = [];
 const decks = [];
 for (const [course, courseData] of Object.entries(CARD_DATA)) {
   for (const [unit, pairs] of Object.entries(courseData.units)) {
-    const unitCards = pairs.map(([question, answer]) => {
+    const unitCards = pairs.map(([question, answer, legacyUnit]) => {
       const card = {
-        id: hashId(`${course}|${unit}|${question}`),
+        // A legacy unit keeps existing review progress when a course is reorganized.
+        id: hashId(`${course}|${legacyUnit || unit}|${question}`),
         course,
         unit,
         question,

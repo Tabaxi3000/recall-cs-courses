@@ -25,6 +25,6 @@ Open `http://localhost:8000` from this directory.
 
 ## Data
 
-Edit `note-aligned-cards.js` for CS 111, CS 157, and CS 251; edit `cs144-cards.js` for CS 144; `cards.js` retains CS 259Q and the legacy source banks; edit `comptia-cards.js` for CompTIA A+ Core 1. Card IDs are stable hashes of course, unit, and prompt text. Reordering cards does not reset progress, but changing a prompt or moving it to another unit creates a new card ID.
+Edit `note-aligned-cards.js` for CS 111, CS 157, and CS 251; edit `cs144-cards.js` for CS 144; `cards.js` retains CS 259Q and the legacy source banks; edit `comptia-cards.js` for CompTIA A+ Core 1. Card IDs are stable hashes of course, unit, and prompt text. Reordering cards does not reset progress. CS144 cards carried into the Winter 2025 reorganization include their previous unit as an optional third tuple value, preserving existing schedules; a genuinely new or substantially rewritten prompt receives a new ID.
 
 Math is rendered to MathML with vendored Temml 0.13.4.
